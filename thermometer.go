@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/csv"
-	//"errors"
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io/ioutil"
 	"log"

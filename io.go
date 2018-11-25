@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"rpio"
+	"github.com/stianeikeland/go-rpio"
 )
 
 var thermometer []Thermometer

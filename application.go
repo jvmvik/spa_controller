@@ -44,28 +44,31 @@ func mainLoop(event <-chan string) {
 	for {
 		switch <-event {
 		case RUNALL_EVENT:
-			RunAllPump()
+			go RunAllPump()
 		case STOP_EVENT:
-			StopAllPump()
+			go StopAllPump()
 		case WARM_EVENT:
-			WarmUp()
+			go WarmUp()
 		case COOL_EVENT:
-			CoolDown()
+			go CoolDown()
 		case PUMP1_ON:
-			Pump(1, true)
+			go Pump(1, true)
 		case PUMP1_OFF:
-			Pump(1, false)
+			go Pump(1, false)
 		case PUMP2_ON:
-			Pump(2, true)
+			go Pump(2, true)
 		case PUMP2_OFF:
-			Pump(2, false)
+			go Pump(2, false)
 		case CIRCULATION_ON_EVENT:
-			Pump(0, true)
+			go Pump(0, true)
 		case CIRCULATION_OFF_EVENT:
-			Pump(0, false)
+			go Pump(0, false)
+		default:
+			log.Println("Error: event is not implemented")
 		}
-		log.Println("wait for new event")
+		log.Println("wait 5s before new event")
 		time.Sleep(time.Second * 5)
+		log.Println("listening for new event")
 	}
 }
 
