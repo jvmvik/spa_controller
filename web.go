@@ -47,7 +47,7 @@ func stateHandler(w http.ResponseWriter, r *http.Request) {
 	data["pump1"] = pump1_state
 	data["pump2"] = pump2_state
 	data["thermometer"] = ReadDatapoint(GetRoot())
-	data["max_temperature"] = MaxTemperature
+	data["thermometer_max"] = MaxTemperature
 
 	d, err := json.Marshal(data)
 	if err != nil {

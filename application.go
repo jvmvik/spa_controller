@@ -69,6 +69,7 @@ func mainLoop(event <-chan string) {
 	}
 }
 
+// SafeShutdown when application is stopped by the user
 func SafeShutdown(stop <-chan os.Signal, s *http.Server) {
 	// wait for stop
 	<-stop
@@ -172,10 +173,11 @@ func main() {
 	// Show log
 	h.HandleFunc("/log", logReaderHandler)
 
-	// server static file
+	// serve static file
 	fs := http.FileServer(http.Dir("static"))
 	h.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// setup main handler
 	h.HandleFunc("/", indexHandler)
 	h.HandleFunc("/state", stateHandler)
 

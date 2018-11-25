@@ -56,7 +56,7 @@ func RunAllPump() {
 
 // StopAllPump to prevent
 func StopAllPump() {
-	log.Println("Stop all")
+	log.Println("Stop all pump")
 	CoolDown()
 	Pump(0, false)
 	Pump(1, false)
@@ -79,8 +79,8 @@ func CoolDown() {
 
 // CheckHeat on the background to avoid overheat
 func CheckHeat() {
-	log.Println("check heat if it's too high!")
 	thermometer = ReadDatapoint(GetRoot())
+	log.Println("check temperature:", thermometer[0].Value, thermometer[1].Value)
 	if thermometer[0].Value > MaxTemperature || thermometer[1].Value > MaxTemperature {
 		CoolDown()
 	}
