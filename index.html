@@ -1,0 +1,40 @@
+<html>
+  <head>
+  <script>
+    function bootstrap()
+    {
+      console.log("load endpoints")
+    list = [
+      "/run/all",
+      "/stop/all",
+	    "/pump/circulation/on",
+	    "/pump/circulation/off",
+	    "/warm/31",
+	    "/cool",
+	    "/pump/1/on",
+	    "/pump/1/off",
+	    "/pump/2/on",
+      "/pump/2/off",
+      "/thermometer/read",
+     // "/thermometer/history",
+    ]
+
+    ul = document.getElementById('endpoint')
+    list.forEach(e => {
+      li = document.createElement('li')
+      link = document.createElement('a')
+      link.href = e
+      link.innerText = e
+      li.appendChild(link)
+      ul.appendChild(li)
+    })
+  }
+  </script>
+  </head>
+  <body onload="bootstrap()">
+    <h4>endpoints</h4>
+    <p>
+    <ul id="endpoint"></ul>
+  </p>
+  </body>
+</html>
