@@ -1,3 +1,6 @@
+# 
+#
+
 file_list=web.go thermometer.go io.go application.go
 remote=pi@spa.local:/home/pi/spa_controller
 
@@ -11,13 +14,13 @@ run:
 	go run $(file_list)
 
 build:
-	go build $(file_list)
+	env GOOS=linux GOARM=6 GOARCH=arm go build -o spa_controller $(file_list)
 
-deploy:
+copy:
 	scp -r *.go index.html static/ Makefile $(remote)
 
-release:
-	env GOARM=6 GOARCH=arm go build $(file_list) ; scp ./web $(remote)
+deploy: build
+	scp spa_controller index.html api.html $(remote)
 
 ssh:
 	ssh pi@spa.local

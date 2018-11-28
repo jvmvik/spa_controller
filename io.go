@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"github.com/stianeikeland/go-rpio"
 )
 
@@ -21,30 +19,6 @@ var (
 	pump2_state            bool    = false
 	MaxTemperature         float64 = 31.0
 )
-
-// BootStrap application
-func BootStrap() {
-	// Open and map memory to access gpio, check for errors
-	if err := rpio.Open(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// Unmap gpio memory when done
-	defer rpio.Close()
-
-	// Set pin to output mode
-	circulation_pump_gpio.Output()
-	heater_gpio.Output()
-	pump1_gpio.Output()
-	pump2_gpio.Output()
-
-	// Pumps
-	Pump(0, true)
-	Pump(1, false)
-	Pump(2, false)
-	CoolDown()
-}
 
 // RunAllPump for 20 minutes
 func RunAllPump() {
@@ -65,7 +39,11 @@ func StopAllPump() {
 
 // WarmUp enable heater
 func WarmUp() {
-	log.Println("Warm UP")
+	log.Println("WarmUp")
+	if circulation_pump_state == false {
+		Pump(0, true)
+	}
+
 	heater_gpio.High()
 	heater_state = true
 }
@@ -83,6 +61,7 @@ func CheckHeat() {
 	log.Println("check temperature:", thermometer[0].Value, thermometer[1].Value)
 	if thermometer[0].Value > MaxTemperature || thermometer[1].Value > MaxTemperature {
 		CoolDown()
+		return
 	}
 }
 

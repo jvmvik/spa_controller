@@ -1,40 +1,240 @@
 <html>
-  <head>
-  <script>
-    function bootstrap()
-    {
-      console.log("load endpoints")
-    list = [
-      "/run/all",
-      "/stop/all",
-	    "/pump/circulation/on",
-	    "/pump/circulation/off",
-	    "/warm/31",
-	    "/cool",
-	    "/pump/1/on",
-	    "/pump/1/off",
-	    "/pump/2/on",
-      "/pump/2/off",
-      "/thermometer/read",
-     // "/thermometer/history",
-    ]
 
-    ul = document.getElementById('endpoint')
-    list.forEach(e => {
-      li = document.createElement('li')
-      link = document.createElement('a')
-      link.href = e
-      link.innerText = e
-      li.appendChild(link)
-      ul.appendChild(li)
-    })
-  }
+<head>
+  <link rel="stylesheet" type="text/css" href="static/semantic.min.css">
+  <link rel="stylesheet" type="text/css" href="static/components/card.min.css">
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+  <script src="static/semantic.min.js"></script>
+  <style>
+    body {
+      margin: 10px
+    }
+  </style>
+  <script>
+    function toggle(items) {
+      items.forEach(element => {
+        element.classList.toggle('active')
+      })
+    }
+
+    function updateState(data) {
+      t0.innerText = data.thermometer[0].Value
+      t1.innerText = data.thermometer[1].Value
+      t_max.innerText = data.thermometer_max
+    }
+
+    function application() {
+
+      const heater_on = document.getElementById("heater_on")
+      const heater_off = document.getElementById("heater_off")
+      const circulation_on = document.getElementById("circulation_on")
+      const circulation_off = document.getElementById("circulation_off")
+      const pump1_on = document.getElementById("pump1_on")
+      const pump1_off = document.getElementById("pump1_off")
+      const pump2_on = document.getElementById("pump2_on")
+      const pump2_off = document.getElementById("pump2_off")
+      const t0 = document.getElementById("t0")
+      const t1 = document.getElementById("t1")
+      const t_max = document.getElementById("t_max")
+
+      console.info("start application")
+      var data = {
+        circulation: true,
+        heater: false,
+        pump1: true,
+        pump2: true,
+        thermometer: [
+          {
+            ID: "28-0517c1a38eff",
+            Value: 22.75
+          },
+          {
+            ID: "28-0517c207d1ff",
+            Value: 22.437
+          }
+        ],
+        thermometer_max: 31
+      }
+
+      // read initial state
+      $.getJSON("/state").done((data) => {
+        if (data.circulation) {
+          circulation_on.classList.add('active')
+        } else {
+          circulation_off.classList.add('active')
+        }
+
+        if (data.heater) {
+          heater_on.classList.add('active')
+        } else {
+          heater_off.classList.add('active')
+        }
+
+        if (data.pump1) {
+          pump1_on.classList.add('active')
+        } else {
+          pump1_off.classList.add('active')
+        }
+
+        if (data.pump2) {
+          pump2_on.classList.add('active')
+        } else {
+          pump2_off.classList.add('active')
+        }
+
+        updateState(data)
+      })
+
+      // Pull temperature every 30seconds
+      setInterval(function() {
+        $.getJSON("/state").done((data) => {
+          console.log("pull temperature every 30s")
+          updateState(data)
+        })
+      }, 30000)
+
+      // register button
+      registerButton(heater_on, "/warm/31", [heater_on,heater_off])
+      registerButton(heater_off, "/cool", [heater_on,heater_off])
+
+      registerButton(circulation_on, "/pump/circulation/on", [circulation_on,circulation_off])
+      registerButton(circulation_off, "/pump/circulation/off", [circulation_on,circulation_off])
+
+      registerButton(pump1_on, "/pump/1/on",   [pump1_on,pump1_off])
+      registerButton(pump1_off, "/pump/1/off", [pump1_on,pump1_off])
+
+      registerButton(pump2_on, "/pump/2/on",   [pump2_on,pump2_off])
+      registerButton(pump2_off, "/pump/2/off", [pump2_on,pump2_off])
+    }
+
+    function registerButton(root_element, url, items) {
+      root_element.onclick = (event) => {
+        $.getJSON(url).done((data) => {
+          if (data.state == 'ok') {
+            toggle(items)
+          }
+        })
+      }
+    }
   </script>
-  </head>
-  <body onload="bootstrap()">
-    <h4>endpoints</h4>
-    <p>
-    <ul id="endpoint"></ul>
-  </p>
-  </body>
+</head>
+
+<body onload="application()">
+  <div class="container segment">
+    <h1 class="ui dividing header"> Spa Controller <a class="ui blue label" href="/api">api</a></h1><br/>
+
+    <div class="ui three cards stackable grid container">
+        <div class="ui card">
+          <div class="content">
+            <div class="header">
+              Temperature
+            </div>
+          </div>
+  
+          <div class="ui horizontal labeled icon buttons">
+              <button class="ui button">
+                  <i class="thermometer icon"></i>
+                  <span id="t0">21.0</span> &#8451;
+                </button>
+                <button id="heater_on" class="ui button">
+                  <i class="thermometer icon"></i>
+                  <span id="t1">22.0</span> &#8451;
+                </button>
+          </div>
+
+          <div class="ui horizontal labeled icon buttons">
+              <button class="ui disabled button">
+              <i class="thermometer icon"></i><span id="t_max">31.0</span> &#8451; max temperature
+              </button>
+          </div>
+        </div>
+
+        <!-- heater -->
+      <div class="ui card">
+          <div class="content">
+            <div class="header">
+              Heater
+            </div>
+          </div>
+  
+          <div class="ui vertical labeled icon buttons">
+            <button id="heater_off" class="ui button active">
+              <i class="pause icon"></i>
+              Off
+            </button>
+            <button id="heater_on" class="ui button">
+              <i class="play icon"></i>
+              On
+            </button>
+          </div>
+        </div>
+  
+        <!-- circulation -->
+        <div class="ui card">
+          <div class="content">
+            <div class="header">
+              Circulation
+            </div>
+          </div>
+  
+          <div class="ui vertical labeled icon buttons">
+            <button id="circulation_off" class="ui button">
+              <i class="pause icon"></i>
+              Off
+            </button>
+            <button id="circulation_on" class="ui button">
+              <i class="play icon"></i>
+              On
+            </button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="ui four cards stackable grid container">
+      
+          <!-- Pump 1 -->
+          <div class="ui card">
+            <div class="content">
+              <div class="header">
+                Pump 1
+              </div>
+            </div>
+    
+            <div class="ui vertical labeled icon buttons">
+              <button id="pump1_off" class="ui button">
+                <i class="pause icon"></i>
+                Off
+              </button>
+              <button id="pump1_on" class="ui button">
+                <i class="play icon"></i>
+                On
+              </button>
+            </div>
+          </div>
+    
+          <!-- pump 2-->
+          <div class="ui card">
+            <div class="content">
+              <div class="header">
+                Pump 2
+              </div>
+            </div>
+    
+            <div class="ui vertical labeled icon buttons">
+              <button id="pump2_off" class="ui button">
+                <i class="pause icon"></i>
+                Off
+              </button>
+              <button id="pump2_on" class="ui button">
+                <i class="play icon"></i>
+                On
+              </button>
+            </div>
+          </div>
+        </div>
+  </div>
+</body>
+
 </html>

@@ -67,7 +67,7 @@ func ReadTemperature(path string, id string) *Thermometer {
 	if err != nil {
 		log.Fatal("fail to parse temperature")
 	}
-	return &Thermometer{id, float64(temperature / 1000)}
+	return &Thermometer{id, Round(float64(temperature/1000), 1)}
 }
 
 func Round(x float64, places int) float64 {

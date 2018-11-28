@@ -21,22 +21,21 @@ func ack(w http.ResponseWriter) {
 	fmt.Fprintf(w, string(data))
 }
 
-func readTemperatureHandler(w http.ResponseWriter, r *http.Request) {
-	thermometer := ReadDatapoint(GetRoot())
-	data, err := json.Marshal(thermometer)
-	if err != nil {
-		log.Fatal("fail encoding datapoint to JSON")
-	}
-	fmt.Fprintf(w, string(data))
-}
-
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-	// Current value to display
 	t, _ := template.ParseFiles("index.html")
+	t.Execute(w, nil)
+}
+
+func apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	t, _ := template.ParseFiles("api.html")
 	t.Execute(w, nil)
 }
 

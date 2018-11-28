@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/stianeikeland/go-rpio"
 	"github.com/mileusna/crontab"
 )
 
@@ -18,11 +19,12 @@ import (
 
 const (
 	RUNALL_EVENT          string = "/run/all"
+	STOP_EVENT            string = "/stop/all"
 	CIRCULATION_ON_EVENT  string = "/pump/circulation/on"
 	CIRCULATION_OFF_EVENT string = "/pump/circulation/off"
-	STOP_EVENT            string = "/stop/all"
 	WARM_EVENT            string = "/warm/31"
 	COOL_EVENT            string = "/cool"
+	CHECK_HEAT_EVENT      string = "/check"
 	PUMP1_ON              string = "/pump/1/on"
 	PUMP1_OFF             string = "/pump/1/off"
 	PUMP2_ON              string = "/pump/2/on"
@@ -44,25 +46,27 @@ func mainLoop(event <-chan string) {
 	for {
 		switch <-event {
 		case RUNALL_EVENT:
-			go RunAllPump()
+			RunAllPump()
 		case STOP_EVENT:
-			go StopAllPump()
+			StopAllPump()
 		case WARM_EVENT:
-			go WarmUp()
+			WarmUp()
 		case COOL_EVENT:
-			go CoolDown()
+			CoolDown()
 		case PUMP1_ON:
-			go Pump(1, true)
+			Pump(1, true)
 		case PUMP1_OFF:
-			go Pump(1, false)
+			Pump(1, false)
 		case PUMP2_ON:
-			go Pump(2, true)
+			Pump(2, true)
 		case PUMP2_OFF:
-			go Pump(2, false)
+			Pump(2, false)
 		case CIRCULATION_ON_EVENT:
-			go Pump(0, true)
+			Pump(0, true)
 		case CIRCULATION_OFF_EVENT:
-			go Pump(0, false)
+			Pump(0, false)
+		case CHECK_HEAT_EVENT:
+			CheckHeat()
 		default:
 			log.Println("Error: event is not implemented")
 		}
@@ -94,33 +98,53 @@ func main() {
 	//setupLog()
 	log.Println("start application")
 
-	// Load application
-	BootStrap()
+	// Open and map memory to access gpio, check for errors
+	if err := rpio.Open(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	// run crontab
-	cron := crontab.New()
+	// Unmap gpio memory when done
+	defer rpio.Close()
+
+	// Set pin to output mode
+	circulation_pump_gpio.Output()
+	heater_gpio.Output()
+	pump1_gpio.Output()
+	pump2_gpio.Output()
+
+	// Pumps
+	Pump(0, true)
+	Pump(1, false)
+	Pump(2, false)
+	CoolDown()
 
 	// run circulation pump
 	event := make(chan string)
 
+	// run crontab
+	cron := crontab.New()
+
 	// Run all pump every day for 10 minutes around 4pm
-	cron.AddJob("0 0 4 * *", RunAllPump)
-	cron.AddJob("0 10 4 * *", StopAllPump)
+	cron.AddJob("0 0 4 * *", func() {
+		event <- RUNALL_EVENT
+	})
+	cron.AddJob("0 10 4 * *", func() {
+		event <- STOP_EVENT
+	})
 	log.Println("cron: run pump 10min every day")
 
 	// Check if hot tub does not overheat every 5 minutes
-	cron.AddJob("*/2 * * * *", CheckHeat)
+	cron.AddJob("*/2 * * * *", func() {
+		event <- CHECK_HEAT_EVENT
+	})
 	log.Println("cron: check for overheat every 5minutes")
 
 	// run main loop
 	go mainLoop(event)
 
-	fmt.Println("start web server.\n http://spa/")
+	fmt.Println("start web server.\n http://spa:8080/")
 	h := http.NewServeMux()
-
-	// temperature terading
-	h.HandleFunc("/thermometer/read", readTemperatureHandler)
-	//h.HandleFunc("/thermometer/history", recordHandler)
 
 	// register action
 	h.HandleFunc(RUNALL_EVENT, func(w http.ResponseWriter, r *http.Request) {
@@ -173,8 +197,13 @@ func main() {
 		ack(w)
 	})
 
+	h.HandleFunc(CHECK_HEAT_EVENT, func(w http.ResponseWriter, r *http.Request) {
+		event <- CHECK_HEAT_EVENT
+		ack(w)
+	})
+
 	// Show log
-	h.HandleFunc("/log", logReaderHandler)
+	//	h.HandleFunc("/log", logReaderHandler)
 
 	// serve static file
 	fs := http.FileServer(http.Dir("static"))
@@ -182,9 +211,10 @@ func main() {
 
 	// setup main handler
 	h.HandleFunc("/", indexHandler)
+	h.HandleFunc("/api", apiHandler)
 	h.HandleFunc("/state", stateHandler)
 
-	server := &http.Server{Addr: ":80", Handler: h}
+	server := &http.Server{Addr: ":8080", Handler: h}
 
 	// register interrupt handler
 	stop := make(chan os.Signal, 1)
