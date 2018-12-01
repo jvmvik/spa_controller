@@ -1,0 +1,15 @@
+[Unit]
+Description=spa controller
+After=network.target
+
+[Service]
+ExecStart=/home/pi/spa_controller/spa_controller
+WorkingDirectory=/home/pi/spa_controller/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+
