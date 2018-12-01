@@ -95,7 +95,10 @@
       }, 30000)
 
       // register button
-      registerButton(heater_on, "/warm/31", [heater_on,heater_off])
+      registerButton(heater_on, "/warm/31", [heater_on,heater_off], function() {
+        circulation_on.classList.add("active")
+        circulation_off.classList.remove("active")
+      })
       registerButton(heater_off, "/cool", [heater_on,heater_off])
 
       registerButton(circulation_on, "/pump/circulation/on", [circulation_on,circulation_off])
@@ -106,13 +109,24 @@
 
       registerButton(pump2_on, "/pump/2/on",   [pump2_on,pump2_off])
       registerButton(pump2_off, "/pump/2/off", [pump2_on,pump2_off])
+
+      // semantic ui action
+      $('.accordion').accordion({
+        selector: {
+          trigger: '.title .icon'
+        }
+      })
     }
 
-    function registerButton(root_element, url, items) {
+    function registerButton(root_element, url, items, callback) {
       root_element.onclick = (event) => {
         $.getJSON(url).done((data) => {
           if (data.state == 'ok') {
             toggle(items)
+
+            if(callback) {
+              callback(data)
+            }
           }
         })
       }
@@ -143,11 +157,33 @@
                 </button>
           </div>
 
-          <div class="ui horizontal labeled icon buttons">
-              <button class="ui disabled button">
-              <i class="thermometer icon"></i><span id="t_max">31.0</span> &#8451; max temperature
-              </button>
+          <div class="ui  labeled icon buttons accordion fluid menu" style="width: 100%">
+            <div class="item" style="width: 100%;">
+              <a class="title">
+                <i class="thermometer icon"></i>
+                 <span id="t_max">31.0</span> &#8451; max / 
+                 <span id="t_max">15.0</span> &#8451; min
+                 <i class="setting icon"></i>
+              </a>
+              <div class="content">
+                <div class="ui form">
+                  <div class="grouped fields">
+                    <div class="field">
+                      <div class="ui radio checkbox">
+                        <input type="radio" name="size" value="small">
+                        <label>Small</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+          <!-- <div class="ui horizontal labeled icon buttons">
+              <button class="ui disabled button">
+              <i class="thermometer icon"></i><span id="t_max">31.0</span> &#8451; max / 
+              </button>
+          </div> -->
         </div>
 
         <!-- heater -->

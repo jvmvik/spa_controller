@@ -18,6 +18,7 @@ var (
 	pump1_state            bool    = false
 	pump2_state            bool    = false
 	MaxTemperature         float64 = 31.0
+	MinTemperature         float64 = 15.0
 )
 
 // RunAllPump for 20 minutes
@@ -39,7 +40,7 @@ func StopAllPump() {
 
 // WarmUp enable heater
 func WarmUp() {
-	log.Println("WarmUp")
+	log.Println("Warm up the heater and run circulation pump")
 	if circulation_pump_state == false {
 		Pump(0, true)
 	}
@@ -50,7 +51,7 @@ func WarmUp() {
 
 // CoolDown stop heater
 func CoolDown() {
-	log.Println("Cool Down")
+	log.Println("Cool down")
 	heater_gpio.Low()
 	heater_state = false
 }
@@ -58,9 +59,19 @@ func CoolDown() {
 // CheckHeat on the background to avoid overheat
 func CheckHeat() {
 	thermometer = ReadDatapoint(GetRoot())
-	log.Println("check temperature:", thermometer[0].Value, thermometer[1].Value)
+	log.Println("check temperature: t0 = ", thermometer[0].Value, ", t1 = ", thermometer[1].Value)
+
+	// too warm
 	if thermometer[0].Value > MaxTemperature || thermometer[1].Value > MaxTemperature {
+		log.Println("t > t_max = ", MaxTemperature)
 		CoolDown()
+		return
+	}
+
+	// too cool
+	if thermometer[0].Value < MinTemperature && thermometer[1].Value < MinTemperature {
+		log.Println("t < t_min = ", MinTemperature)
+		WarmUp()
 		return
 	}
 }

@@ -213,6 +213,7 @@ func main() {
 	h.HandleFunc("/", indexHandler)
 	h.HandleFunc("/api", apiHandler)
 	h.HandleFunc("/state", stateHandler)
+	h.HandleFunc("/set", setHandler)
 
 	server := &http.Server{Addr: ":8080", Handler: h}
 
