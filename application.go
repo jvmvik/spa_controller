@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stianeikeland/go-rpio"
 	"github.com/mileusna/crontab"
 )
 
@@ -22,7 +21,7 @@ const (
 	STOP_EVENT            string = "/stop/all"
 	CIRCULATION_ON_EVENT  string = "/pump/circulation/on"
 	CIRCULATION_OFF_EVENT string = "/pump/circulation/off"
-	WARM_EVENT            string = "/warm/31"
+	WARM_EVENT            string = "/warm"
 	COOL_EVENT            string = "/cool"
 	CHECK_HEAT_EVENT      string = "/check"
 	PUMP1_ON              string = "/pump/1/on"
@@ -70,9 +69,9 @@ func mainLoop(event <-chan string) {
 		default:
 			log.Println("Error: event is not implemented")
 		}
-		log.Println("wait 5s before new event")
+		//log.Println("wait 5s before new event")
 		time.Sleep(time.Second * 5)
-		log.Println("listening for new event")
+		//log.Println("listening for new event")
 	}
 }
 

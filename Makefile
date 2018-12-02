@@ -28,6 +28,8 @@ deploy: build
 debug:
 	ssh $(remote)
 
+ssh: debug
+
 # install as systemd service
 install_service:
 	@echo "sudo cp $(root)/spa_controller.service /etc/systemd/system/" | ssh $(remote)

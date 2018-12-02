@@ -50,13 +50,6 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 //  /set?t_max=31
 //  /set?t_minx=31
 func setHandler(w http.ResponseWriter, r *http.Request) {
-
-	// u, err := url.Parse(r.URL.rawurl)
-	// if err != nil {
-	// 	fail(w, "invalid url: "+r.URL.rawurl)
-	// 	return
-	// }
-
 	query := r.URL.Query()
 	if query["t_max"] != nil {
 		max, err := strconv.ParseFloat(query["t_max"][0], 64)
@@ -76,7 +69,7 @@ func setHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if min < MaxTemperature {
+		if min > MaxTemperature {
 			fail(w, "t_min > t_max <=> "+query["t_min"][0]+" > "+strconv.FormatFloat(MaxTemperature, 'E', -1, 64))
 			return
 		}
@@ -88,6 +81,8 @@ func setHandler(w http.ResponseWriter, r *http.Request) {
 
 	m := map[string]interface{}{}
 	m["state"] = "ok"
+	m["thermometer_max"] = MaxTemperature
+	m["thermometer_min"] = MinTemperature
 	fmt.Fprintf(w, toJSON(m))
 }
 
@@ -100,12 +95,14 @@ func fail(w http.ResponseWriter, msg string) {
 
 func stateHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{}
+	data["state"] = "ok"
 	data["circulation"] = circulation_pump_state
 	data["heater"] = heater_state
 	data["pump1"] = pump1_state
 	data["pump2"] = pump2_state
 	data["thermometer"] = ReadDatapoint(GetRoot())
 	data["thermometer_max"] = MaxTemperature
+	data["thermometer_min"] = MinTemperature
 	fmt.Fprintf(w, toJSON(data))
 }
 
