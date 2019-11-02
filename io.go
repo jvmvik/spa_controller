@@ -91,7 +91,7 @@ func Pump(num int, on bool) {
 		pump = pump2_gpio
 		pump2_state = on
 	default:
-		log.Fatal("no pump: %d", num)
+		log.Fatalf("no pump: %d", num)
 	}
 
 	if on {

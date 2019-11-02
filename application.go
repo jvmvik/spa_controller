@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mileusna/crontab"
+	"github.com/stianeikeland/go-rpio"
 )
 
 /***
